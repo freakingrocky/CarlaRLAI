@@ -1,3 +1,3 @@
-# The Development of this project is underway.
+# The project is under development.
 
 Current Goal: Event Based Sensor Fusion with RGB-D

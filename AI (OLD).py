@@ -1,7 +1,8 @@
 """
 Adhering (Sort of) to the insustry standards set bt OpenAI.
 
-Base Code: https://github.com/Sentdex/Carla-RL
+Based closely on code by Sentdex: https://github.com/Sentdex/Carla-RL
+Depoly PCA on data if performance is bad {Must use mean normalization & feature scaling}
 """
 
 # Import Carla Egg
@@ -56,13 +57,12 @@ PREDICTION_BATCH_SIZE = 1
 TRAINING_BATCH_SIZE = MINIBATCH_SIZE // 4
 DELTA_t = 5
 FRAME_RATE = 15
-
 # Pre-Made Model
 MODEL_NAME = 'ResNet152'
 
 MIN_REWARD = -200
 # Epochs
-EPISODES = 10  # EPOCHS
+EPISODES = 80  # EPOCHS
 
 DISCOUNT = 0.99
 epsilon = 1
@@ -217,7 +217,7 @@ class Car:
         self.vehicle.apply_control(
             carla.VehicleControl(throttle=0.0, brake=0.0))
 
-        return self.fuse(self.rgb_camera, self.depth_cam, self.dvs_cam)
+        return self.composite(self.rgb_camera, self.depth_cam, self.dvs_cam)
 
     def collision_data(self, event):
         self.collisions.append(event)
@@ -292,17 +292,12 @@ class Car:
         if self.episode_start + EPISODE_DURATION < time.time():
             done = True
 
-        return self.fuse(self.rgb_camera, self.depth_cam, self.dvs_cam), reward, done, None
+        return self.composite(self.rgb_camera, self.depth_cam, self.dvs_cam), reward, done, None
 
-    def fuse(self, rgb_cam, depth_cam, dvs_cam):
+    def composite(self, rgb_cam, depth_cam, dvs_cam):
         # ! TODO, Sensor Fusion (RGB-D + Event Based)
-        # Current Idea:
-        #     Motion Blur Removal using DVS Camera (Spiking)
 
-        # Simplest form of RGB-D fusion. Simply add another channel
-        data = np.hstack((rgb_cam, depth_cam))
-
-        return data
+        return rgb_cam
 
 
 class DQNAgent:
@@ -324,7 +319,7 @@ class DQNAgent:
 
     def create_model(self):
         base_model = ResNet152(
-            weights=None, include_top=False, input_shape=(IM_HEIGHT, IM_WIDTH, 3)) #! See
+            weights=None, include_top=False, input_shape=(IM_HEIGHT, IM_WIDTH, 3))
 
         x = base_model.output
         x = tf.keras.layers.GlobalAveragePooling2D()(x)
@@ -346,7 +341,7 @@ class DQNAgent:
         self.replay_memory.append(transition)
 
     def train(self):
-        """The Q-Learning Algorithm."""
+        # The Q-Learning Algorithm
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
             return False
 

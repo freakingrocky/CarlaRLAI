@@ -297,9 +297,9 @@ class Car:
     def fuse(self, rgb_cam, depth_cam, dvs_cam):
         # ! TODO, Sensor Fusion (RGB-D + Event Based)
         # Current Idea:
-        #     Motion Blur Removal using DVS Camera (Spiking)
+        #     Spiking
 
-        # Simplest form of RGB-D fusion. Simply add another channel
+        # Simplest form of RGB-D fusion. Simply added another channel
         data = np.hstack((rgb_cam, depth_cam))
 
         return data
@@ -324,7 +324,7 @@ class DQNAgent:
 
     def create_model(self):
         base_model = ResNet152(
-            weights=None, include_top=False, input_shape=(IM_HEIGHT, IM_WIDTH, 3)) #! See
+            weights=None, include_top=False, input_shape=(IM_HEIGHT, IM_WIDTH, 4)) 
 
         x = base_model.output
         x = tf.keras.layers.GlobalAveragePooling2D()(x)
